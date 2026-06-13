@@ -1,6 +1,15 @@
 from flask import Flask, render_template, request
+from flask_mysqldb import MySQL
 
 app = Flask(__name__)
+
+# MySQL Configuration
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'DG@1847'
+app.config['MYSQL_DB'] = 'student_management'
+
+mysql = MySQL(app)
 
 @app.route('/')
 def home():
@@ -15,7 +24,7 @@ def login():
         password = request.form['password']
 
         if username == 'admin' and password == 'admin123':
-            return "Login Successful"
+            return render_template('dashboard.html')
 
         return "Invalid Credentials"
 
