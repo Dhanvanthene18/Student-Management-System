@@ -29,6 +29,44 @@ def login():
         return "Invalid Credentials"
 
     return render_template('login.html')
+@app.route('/add_student', methods=['GET', 'POST'])
+def add_student():
+
+    if request.method == 'POST':
+
+        name = request.form['name']
+        email = request.form['email']
+        department = request.form['department']
+        year = request.form['year']
+
+        cur = mysql.connection.cursor()
+
+        cur.execute(
+            "INSERT INTO students(name,email,department,year) VALUES(%s,%s,%s,%s)",
+            (name, email, department, year)
+        )
+
+        mysql.connection.commit()
+        cur.close()
+
+        return "Student Added Successfully"
+
+    return render_template('add_student.html')
+@app.route('/view_students')
+def view_students():
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("SELECT * FROM students")
+
+    students = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'view_students.html',
+        students=students
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
