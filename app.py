@@ -49,9 +49,10 @@ def add_student():
         mysql.connection.commit()
         cur.close()
 
-        return "Student Added Successfully"
+        from flask import redirect
 
-    return render_template('add_student.html')
+        return redirect('/view_students')
+        return render_template('add_student.html')
 @app.route('/view_students')
 def view_students():
 
@@ -67,6 +68,32 @@ def view_students():
         'view_students.html',
         students=students
     )
+@app.route('/delete_student/<int:id>')
+def delete_student(id):
+
+    cur = mysql.connection.cursor()
+
+    cur.execute(
+        "DELETE FROM students WHERE id=%s",
+        (id,)
+    )
+
+    mysql.connection.commit()
+    cur.close()
+
+    return "Student Deleted Successfully"
 
 if __name__ == '__main__':
     app.run(debug=True)
+@app.route('/delete_student/<int:id>')
+def delete_student(id):
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("DELETE FROM students WHERE id=%s", (id,))
+
+    mysql.connection.commit()
+
+    cur.close()
+
+    return redirect('/view_students')
