@@ -8,12 +8,14 @@
 <h2>Student List</h2>
 
 <table border="1">
+
     <tr>
         <th>ID</th>
         <th>Name</th>
         <th>Email</th>
         <th>Department</th>
         <th>Year</th>
+        <th>Action</th>
     </tr>
 
     {% for student in students %}
@@ -23,6 +25,12 @@
         <td>{{ student[2] }}</td>
         <td>{{ student[3] }}</td>
         <td>{{ student[4] }}</td>
+
+        <td>
+            <a href="/delete_student/{{ student[0] }}">
+                Delete
+            </a>
+        </td>
     </tr>
     {% endfor %}
 
