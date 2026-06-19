@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_mysqldb import MySQL
 
 app = Flask(__name__)
@@ -11,10 +11,14 @@ app.config['MYSQL_DB'] = 'student_management'
 
 mysql = MySQL(app)
 
+
+# Home Page
 @app.route('/')
 def home():
     return render_template('index.html')
 
+
+# Login Page
 @app.route('/login', methods=['GET', 'POST'])
 def login():
 
@@ -24,11 +28,26 @@ def login():
         password = request.form['password']
 
         if username == 'admin' and password == 'admin123':
-            return render_template('dashboard.html')
+
+         cur = mysql.connection.cursor()
+
+         cur.execute("SELECT COUNT(*) FROM students")
+
+         total_students = cur.fetchone()[0]
+
+         cur.close()
+
+         return render_template(
+         'dashboard.html',
+         total_students=total_students
+    )
 
         return "Invalid Credentials"
 
     return render_template('login.html')
+
+
+# Add Student
 @app.route('/add_student', methods=['GET', 'POST'])
 def add_student():
 
@@ -42,17 +61,19 @@ def add_student():
         cur = mysql.connection.cursor()
 
         cur.execute(
-            "INSERT INTO students(name,email,department,year) VALUES(%s,%s,%s,%s)",
+            "INSERT INTO students(name, email, department, year) VALUES(%s, %s, %s, %s)",
             (name, email, department, year)
         )
 
         mysql.connection.commit()
         cur.close()
 
-        from flask import redirect
-
         return redirect('/view_students')
-        return render_template('add_student.html')
+
+    return render_template('add_student.html')
+
+
+# View Students
 @app.route('/view_students')
 def view_students():
 
@@ -68,6 +89,47 @@ def view_students():
         'view_students.html',
         students=students
     )
+
+
+# Update Student
+@app.route('/update_student/<int:id>', methods=['GET', 'POST'])
+def update_student(id):
+
+    cur = mysql.connection.cursor()
+
+    if request.method == 'POST':
+
+        name = request.form['name']
+        email = request.form['email']
+        department = request.form['department']
+        year = request.form['year']
+
+        cur.execute(
+            """
+            UPDATE students
+            SET name=%s, email=%s, department=%s, year=%s
+            WHERE id=%s
+            """,
+            (name, email, department, year, id)
+        )
+
+        mysql.connection.commit()
+        cur.close()
+
+        return redirect('/view_students')
+
+    cur.execute("SELECT * FROM students WHERE id=%s", (id,))
+    student = cur.fetchone()
+
+    cur.close()
+
+    return render_template(
+        'update_student.html',
+        student=student
+    )
+
+
+# Delete Student
 @app.route('/delete_student/<int:id>')
 def delete_student(id):
 
@@ -81,19 +143,8 @@ def delete_student(id):
     mysql.connection.commit()
     cur.close()
 
-    return "Student Deleted Successfully"
+    return redirect('/view_students')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
-@app.route('/delete_student/<int:id>')
-def delete_student(id):
-
-    cur = mysql.connection.cursor()
-
-    cur.execute("DELETE FROM students WHERE id=%s", (id,))
-
-    mysql.connection.commit()
-
-    cur.close()
-
-    return redirect('/view_students')
