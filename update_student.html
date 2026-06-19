@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Student</title>
+</head>
+<body>
+
+<h2>Update Student</h2>
+
+<form method="POST">
+
+    <label>Name:</label><br>
+    <input type="text" name="name" value="{{ student[1] }}"><br><br>
+
+    <label>Email:</label><br>
+    <input type="email" name="email" value="{{ student[2] }}"><br><br>
+
+    <label>Department:</label><br>
+    <input type="text" name="department" value="{{ student[3] }}"><br><br>
+
+    <label>Year:</label><br>
+    <input type="number" name="year" value="{{ student[4] }}"><br><br>
+
+    <input type="submit" value="Update Student">
+
+</form>
+
+<br>
+
+<a href="/view_students">Back to Student List</a>
+
+</body>
+</html>
