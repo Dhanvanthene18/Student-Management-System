@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session
 from flask_mysqldb import MySQL
 
 app = Flask(__name__)
+app.secret_key = 'studentmanagementsecretkey'
 
 # MySQL Configuration
 app.config['MYSQL_HOST'] = 'localhost'
@@ -29,15 +30,16 @@ def login():
 
         if username == 'admin' and password == 'admin123':
 
-         cur = mysql.connection.cursor()
+           session['logged_in'] = True
+        cur = mysql.connection.cursor()
 
-         cur.execute("SELECT COUNT(*) FROM students")
+        cur.execute("SELECT COUNT(*) FROM students")
 
-         total_students = cur.fetchone()[0]
+        total_students = cur.fetchone()[0]
 
-         cur.close()
+        cur.close()
 
-         return render_template(
+        return render_template(
          'dashboard.html',
          total_students=total_students
     )
@@ -50,6 +52,8 @@ def login():
 # Add Student
 @app.route('/add_student', methods=['GET', 'POST'])
 def add_student():
+    if 'logged_in' not in session:
+      return redirect('/login')
 
     if request.method == 'POST':
 
@@ -76,6 +80,9 @@ def add_student():
 # View Students
 @app.route('/view_students')
 def view_students():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
 
     cur = mysql.connection.cursor()
 
@@ -144,6 +151,42 @@ def delete_student(id):
     cur.close()
 
     return redirect('/view_students')
+@app.route('/search_student', methods=['GET', 'POST'])
+def search_student():
+
+    students = []
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+
+        keyword = request.form['keyword']
+
+        cur = mysql.connection.cursor()
+
+        cur.execute(
+            """
+            SELECT * FROM students
+            WHERE name LIKE %s
+            OR department LIKE %s
+            """,
+            ('%' + keyword + '%', '%' + keyword + '%')
+        )
+
+        students = cur.fetchall()
+
+        cur.close()
+
+    return render_template(
+        'search_student.html',
+        students=students
+    )
+@app.route('/logout')
+def logout():
+
+    session.pop('logged_in', None)
+
+    return redirect('/login')
 
 
 if __name__ == '__main__':
