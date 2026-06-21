@@ -1,3 +1,4 @@
+from datetime import date
 from flask import Flask, render_template, request, redirect, session
 from flask_mysqldb import MySQL
 
@@ -187,7 +188,112 @@ def logout():
     session.pop('logged_in', None)
 
     return redirect('/login')
+@app.route('/attendance')
+def attendance():
 
+    if 'logged_in' not in session:
+        return redirect('/login')
 
+    cur = mysql.connection.cursor()
+
+    cur.execute("SELECT * FROM students")
+
+    students = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'attendance.html',
+        students=students
+    )
+from datetime import date
+
+@app.route('/mark_attendance/<int:student_id>/<status>')
+def mark_attendance(student_id, status):
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO attendance
+        (student_id, attendance_date, status)
+        VALUES (%s, %s, %s)
+        """,
+        (student_id, date.today(), status)
+    )
+
+    mysql.connection.commit()
+
+    cur.close()
+
+    return redirect('/attendance')
+@app.route('/view_attendance')
+def view_attendance():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT attendance.id,
+               students.name,
+               attendance.attendance_date,
+               attendance.status
+        FROM attendance
+        JOIN students
+        ON attendance.student_id = students.id
+        ORDER BY attendance.attendance_date DESC
+    """)
+
+    records = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'view_attendance.html',
+        records=records
+    )
+@app.route('/attendance_report')
+def attendance_report():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT
+            students.name,
+
+            SUM(
+                CASE
+                    WHEN attendance.status='Present'
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS present_days,
+
+            COUNT(attendance.id) AS total_days
+
+        FROM students
+
+        LEFT JOIN attendance
+        ON students.id = attendance.student_id
+
+        GROUP BY students.id
+    """)
+
+    data = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'attendance_report.html',
+        data=data
+    )
 if __name__ == '__main__':
     app.run(debug=True)
