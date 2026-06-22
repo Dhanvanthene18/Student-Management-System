@@ -295,5 +295,67 @@ def attendance_report():
         'attendance_report.html',
         data=data
     )
+@app.route('/add_marks', methods=['GET', 'POST'])
+def add_marks():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    if request.method == 'POST':
+
+        student_id = request.form['student_id']
+        subject = request.form['subject']
+        marks = request.form['marks']
+
+        cur.execute(
+            """
+            INSERT INTO marks(student_id, subject, marks)
+            VALUES(%s, %s, %s)
+            """,
+            (student_id, subject, marks)
+        )
+
+        mysql.connection.commit()
+
+        return redirect('/view_marks')
+
+    cur.execute("SELECT id, name FROM students")
+    students = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'add_marks.html',
+        students=students
+    )
+@app.route('/view_marks')
+def view_marks():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT
+            marks.id,
+            students.name,
+            marks.subject,
+            marks.marks
+        FROM marks
+        JOIN students
+        ON marks.student_id = students.id
+    """)
+
+    records = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'view_marks.html',
+        records=records
+    )
 if __name__ == '__main__':
     app.run(debug=True)
