@@ -357,5 +357,32 @@ def view_marks():
         'view_marks.html',
         records=records
     )
+@app.route('/marks_report')
+def marks_report():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT
+            students.name,
+            AVG(marks.marks) AS average_marks
+        FROM students
+        JOIN marks
+        ON students.id = marks.student_id
+        GROUP BY students.id
+        ORDER BY average_marks DESC
+    """)
+
+    data = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'marks_report.html',
+        data=data
+    )
 if __name__ == '__main__':
     app.run(debug=True)
