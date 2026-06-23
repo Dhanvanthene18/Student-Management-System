@@ -384,5 +384,23 @@ def marks_report():
         'marks_report.html',
         data=data
     )
+@app.route('/dashboard')
+def dashboard():
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM students")
+    total_students = cur.fetchone()[0]
+
+    cur.execute("SELECT * FROM students ORDER BY id DESC LIMIT 5")
+    recent_students = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'dashboard.html',
+        total_students=total_students,
+        recent_students=recent_students
+    )
 if __name__ == '__main__':
     app.run(debug=True)
