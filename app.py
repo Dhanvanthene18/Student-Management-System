@@ -17,6 +17,8 @@ mysql = MySQL(app)
 # Home Page
 @app.route('/')
 def home():
+    if 'logged_in' in session:
+        return redirect('/dashboard')
     return render_template('index.html')
 
 
@@ -31,19 +33,10 @@ def login():
 
         if username == 'admin' and password == 'admin123':
 
-           session['logged_in'] = True
-        cur = mysql.connection.cursor()
+            session['logged_in'] = True
+            
 
-        cur.execute("SELECT COUNT(*) FROM students")
-
-        total_students = cur.fetchone()[0]
-
-        cur.close()
-
-        return render_template(
-         'dashboard.html',
-         total_students=total_students
-    )
+            return redirect('/dashboard')
 
         return "Invalid Credentials"
 
@@ -102,6 +95,8 @@ def view_students():
 # Update Student
 @app.route('/update_student/<int:id>', methods=['GET', 'POST'])
 def update_student(id):
+    if 'logged_in' not in session:
+       return redirect('/login')
 
     cur = mysql.connection.cursor()
 
@@ -140,6 +135,9 @@ def update_student(id):
 # Delete Student
 @app.route('/delete_student/<int:id>')
 def delete_student(id):
+
+    if 'logged_in' not in session:
+        return redirect('/login')
 
     cur = mysql.connection.cursor()
 
@@ -206,7 +204,6 @@ def attendance():
         'attendance.html',
         students=students
     )
-from datetime import date
 
 @app.route('/mark_attendance/<int:student_id>/<status>')
 def mark_attendance(student_id, status):
@@ -386,6 +383,9 @@ def marks_report():
     )
 @app.route('/dashboard')
 def dashboard():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
 
     cur = mysql.connection.cursor()
 
