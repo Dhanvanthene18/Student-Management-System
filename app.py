@@ -448,5 +448,58 @@ def export_students():
         file_name,
         as_attachment=True
     )
+@app.route('/student_profile/<int:id>')
+def student_profile(id):
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    # Student Details
+    cur.execute(
+        "SELECT * FROM students WHERE id=%s",
+        (id,)
+    )
+
+    student = cur.fetchone()
+
+    # Attendance Count
+    cur.execute("""
+        SELECT COUNT(*)
+        FROM attendance
+        WHERE student_id=%s
+        AND status='Present'
+    """, (id,))
+
+    attendance_count = cur.fetchone()[0]
+
+    # Marks Details
+    cur.execute("""
+        SELECT subject, marks
+        FROM marks
+        WHERE student_id=%s
+    """, (id,))
+
+    marks = cur.fetchall()
+
+    # Average Marks
+    cur.execute("""
+        SELECT AVG(marks)
+        FROM marks
+        WHERE student_id=%s
+    """, (id,))
+
+    avg_marks = cur.fetchone()[0]
+
+    cur.close()
+
+    return render_template(
+        'student_profile.html',
+        student=student,
+        attendance_count=attendance_count,
+        marks=marks,
+        avg_marks=avg_marks
+    )
 if __name__ == '__main__':
     app.run(debug=True)
