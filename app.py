@@ -391,18 +391,34 @@ def dashboard():
 
     cur = mysql.connection.cursor()
 
+    # Total Students
     cur.execute("SELECT COUNT(*) FROM students")
     total_students = cur.fetchone()[0]
 
+    # Recent Students
     cur.execute("SELECT * FROM students ORDER BY id DESC LIMIT 5")
     recent_students = cur.fetchall()
+
+    # Department Statistics
+    cur.execute("""
+        SELECT department, COUNT(*)
+        FROM students
+        GROUP BY department
+    """)
+
+    dept_data = cur.fetchall()
+
+    departments = [row[0] for row in dept_data]
+    dept_counts = [row[1] for row in dept_data]
 
     cur.close()
 
     return render_template(
         'dashboard.html',
         total_students=total_students,
-        recent_students=recent_students
+        recent_students=recent_students,
+        departments=departments,
+        dept_counts=dept_counts
     )
 @app.route('/export_students')
 def export_students():
@@ -501,5 +517,6 @@ def student_profile(id):
         marks=marks,
         avg_marks=avg_marks
     )
+
 if __name__ == '__main__':
     app.run(debug=True)
