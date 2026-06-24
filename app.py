@@ -1,3 +1,5 @@
+import pandas as pd
+from flask import send_file
 from datetime import date
 from flask import Flask, render_template, request, redirect, session
 from flask_mysqldb import MySQL
@@ -401,6 +403,50 @@ def dashboard():
         'dashboard.html',
         total_students=total_students,
         recent_students=recent_students
+    )
+@app.route('/export_students')
+def export_students():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT
+            id,
+            name,
+            email,
+            department,
+            year
+        FROM students
+    """)
+
+    data = cur.fetchall()
+
+    cur.close()
+
+    df = pd.DataFrame(
+        data,
+        columns=[
+            'ID',
+            'Name',
+            'Email',
+            'Department',
+            'Year'
+        ]
+    )
+
+    file_name = 'students.xlsx'
+
+    df.to_excel(
+        file_name,
+        index=False
+    )
+
+    return send_file(
+        file_name,
+        as_attachment=True
     )
 if __name__ == '__main__':
     app.run(debug=True)
