@@ -13,6 +13,7 @@
         body{
             background:#f5f7fb;
             margin:0;
+            font-family:Arial,sans-serif;
         }
 
         .sidebar{
@@ -30,13 +31,22 @@
         }
 
         .sidebar a{
-            display:block;
-            text-decoration:none;
-            color:#333;
-            padding:12px;
-            border-radius:10px;
-            margin-bottom:10px;
+        display:block;
+        text-decoration:none;
+        color:#333;
+        padding:12px;
+        border-radius:10px;
+        margin-bottom:10px;
+
+        transition:0.3s;
         }
+
+.sidebar a:hover{
+    background:#2563eb;
+    color:white;
+
+    transform:translateX(8px);
+}
 
         .sidebar a:hover{
             background:#2563eb;
@@ -57,11 +67,17 @@
         }
 
         .stat-card{
-            border:none;
-            border-radius:18px;
-            color:white;
-            padding:25px;
-            box-shadow:0 4px 15px rgba(0,0,0,0.1);
+        border-radius:20px;
+        padding:30px;
+        color:white;
+
+        transition:0.3s;
+        cursor:pointer;
+        }
+
+        .stat-card:hover{
+        transform:translateY(-8px);
+        box-shadow:0 15px 30px rgba(0,0,0,0.15);
         }
 
         .blue{
@@ -84,8 +100,67 @@
             font-size:35px;
             margin-bottom:10px;
         }
+        .top-navbar{
+    background:white;
+    padding:15px 25px;
+    margin-bottom:25px;
 
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    border-radius:15px;
+
+    box-shadow:0 3px 10px rgba(0,0,0,0.08);
+}
+
+.top-navbar .left{
+    font-size:24px;
+    font-weight:600;
+    color:#2563eb;
+}
+
+.top-navbar .left span{
+    color:#111827;
+    margin-left:10px;
+}
+
+.top-navbar .right{
+    font-size:18px;
+    color:#374151;
+}
+.table tbody tr{
+    transition:0.3s;
+}
+
+.table tbody tr:hover{
+    background:#f3f4f6;
+}
+.quick-btn{
+    transition:0.3s;
+}
+
+.quick-btn:hover{
+    transform:translateY(-5px);
+    box-shadow:0 10px 20px rgba(0,0,0,0.15);
+}
+.main{
+    animation:fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn{
+    from{
+        opacity:0;
+        transform:translateY(20px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
     </style>
+
 </head>
 <body>
 
@@ -119,94 +194,156 @@
 
 <div class="main">
 
-<div class="topbar d-flex justify-content-between align-items-center">
+    <div class="topbar d-flex justify-content-between align-items-center">
+        <div class="top-navbar">
 
-    <h4>Dashboard 👋</h4>
+    <div class="left">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Student Management System</span>
+    </div>
 
-    <form action="/search_student" method="GET">
-
-        <input
-            type="text"
-            name="keyword"
-            placeholder="Search Student..."
-            class="form-control">
-
-    </form>
+    <div class="right">
+        <i class="fas fa-user-circle"></i>
+        Welcome, Admin
+    </div>
 
 </div>
+
         <h4>Dashboard 👋</h4>
 
-        <h5>Welcome Admin</h5>
+        <form action="/search_student" method="GET">
+
+            <input
+                type="text"
+                name="keyword"
+                placeholder="Search Student..."
+                class="form-control">
+
+        </form>
 
     </div>
 
     <div class="row g-4">
 
         <div class="col-md-3">
-
             <div class="stat-card blue">
-
                 <div class="icon">
                     <i class="fas fa-users"></i>
                 </div>
-
                 <h5>Total Students</h5>
-
                 <h2>{{ total_students }}</h2>
-
             </div>
-
         </div>
 
         <div class="col-md-3">
-
             <div class="stat-card green">
-
                 <div class="icon">
                     <i class="fas fa-calendar-check"></i>
                 </div>
-
                 <h5>Attendance</h5>
-
                 <h2>100%</h2>
-
             </div>
-
         </div>
 
         <div class="col-md-3">
-
             <div class="stat-card orange">
-
                 <div class="icon">
                     <i class="fas fa-book"></i>
                 </div>
-
                 <h5>Subjects</h5>
-
                 <h2>0</h2>
-
             </div>
-
         </div>
 
         <div class="col-md-3">
-
             <div class="stat-card purple">
-
                 <div class="icon">
                     <i class="fas fa-graduation-cap"></i>
                 </div>
-
                 <h5>Marks</h5>
-
                 <h2>0</h2>
-
             </div>
+        </div>
+
+    </div>
+
+    <br><br>
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-primary text-white">
+            <h5>Recent Students</h5>
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Department</th>
+                        <th>Year</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for student in recent_students %}
+
+                    <tr>
+
+                        <td>{{ student[0] }}</td>
+                        <td>{{ student[1] }}</td>
+                        <td>{{ student[2] }}</td>
+                        <td>{{ student[3] }}</td>
+                        <td>{{ student[4] }}</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
 
         </div>
 
     </div>
+
+    <br>
+
+    <div class="row mt-4">
+
+    <div class="col">
+        <a href="/add_student" class="btn btn-primary w-100 quick-btn">
+            Add Student
+        </a>
+    </div>
+
+    <div class="col">
+        <a href="/attendance" class="btn btn-success w-100 quick-btn">
+            Attendance
+        </a>
+    </div>
+
+    <div class="col">
+        <a href="/add_marks" class="btn btn-warning w-100 quick-btn">
+            Add Marks
+        </a>
+    </div>
+
+    <div class="col">
+        <a href="/view_students" class="btn btn-info w-100 quick-btn">
+            View Students
+        </a>
+    </div>
+
+</div>
 
 </div>
 
