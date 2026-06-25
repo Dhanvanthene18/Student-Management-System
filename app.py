@@ -547,6 +547,49 @@ def analytics():
         departments=departments,
         dept_counts=dept_counts
     )
+@app.route('/add_subject', methods=['GET', 'POST'])
+def add_subject():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+
+        subject_name = request.form['subject_name']
+        department = request.form['department']
+
+        cur = mysql.connection.cursor()
+
+        cur.execute(
+            """
+            INSERT INTO subjects(subject_name, department)
+            VALUES(%s, %s)
+            """,
+            (subject_name, department)
+        )
+
+        mysql.connection.commit()
+
+        cur.close()
+
+        return redirect('/view_subjects')
+
+    return render_template('add_subject.html')
+@app.route('/view_subjects')
+def view_subjects():
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("SELECT * FROM subjects")
+
+    subjects = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'view_subjects.html',
+        subjects=subjects
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
