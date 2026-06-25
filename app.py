@@ -517,6 +517,36 @@ def student_profile(id):
         marks=marks,
         avg_marks=avg_marks
     )
+@app.route('/analytics')
+def analytics():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT department, COUNT(*)
+        FROM students
+        GROUP BY department
+    """)
+
+    result = cur.fetchall()
+
+    departments = []
+    dept_counts = []
+
+    for row in result:
+        departments.append(row[0])
+        dept_counts.append(row[1])
+
+    cur.close()
+
+    return render_template(
+        'analytics.html',
+        departments=departments,
+        dept_counts=dept_counts
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
