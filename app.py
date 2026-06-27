@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from flask import send_from_directory
 from werkzeug.utils import secure_filename
 from flask import send_file
 from datetime import date
@@ -607,6 +608,9 @@ def view_subjects():
         'view_subjects.html',
         subjects=subjects
     )
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
