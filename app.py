@@ -1,10 +1,14 @@
 import pandas as pd
+import os
+from werkzeug.utils import secure_filename
 from flask import send_file
 from datetime import date
 from flask import Flask, render_template, request, redirect, session
 from flask_mysqldb import MySQL
 
 app = Flask(__name__)
+UPLOAD_FOLDER = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'studentmanagementsecretkey'
 
 # MySQL Configuration
@@ -57,12 +61,25 @@ def add_student():
         email = request.form['email']
         department = request.form['department']
         year = request.form['year']
+        photo = request.files['photo']
+
+        filename = secure_filename(photo.filename)
+        photo.save(
+            os.path.join(
+               app.config['UPLOAD_FOLDER'],
+               filename
+            )
+        )
 
         cur = mysql.connection.cursor()
 
         cur.execute(
-            "INSERT INTO students(name, email, department, year) VALUES(%s, %s, %s, %s)",
-            (name, email, department, year)
+           """
+           INSERT INTO students
+           (name, email, department, year, photo)
+           VALUES(%s, %s, %s, %s, %s)
+           """,
+           (name, email, department, year, filename)
         )
 
         mysql.connection.commit()
