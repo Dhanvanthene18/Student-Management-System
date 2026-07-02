@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import qrcode
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
 from flask import send_file
@@ -10,6 +11,8 @@ from flask_mysqldb import MySQL
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+QR_FOLDER = 'static/qr_codes'
+app.config['QR_FOLDER'] = QR_FOLDER
 app.secret_key = 'studentmanagementsecretkey'
 
 # MySQL Configuration
@@ -65,16 +68,31 @@ def add_student():
         photo = request.files['photo']
 
         filename = secure_filename(photo.filename)
-        photo.save(
+        qr = qrcode.make(
+            f"""
+        Name: {name}
+        Email: {email}
+        Department: {department}
+        Year: {year}
+        """
+        )
+
+        qr.save(
+          os.path.join(
+          app.config['QR_FOLDER'],
+          f"{name}.png"
+        )
+    )
+    photo.save(
             os.path.join(
                app.config['UPLOAD_FOLDER'],
                filename
             )
         )
 
-        cur = mysql.connection.cursor()
+    cur = mysql.connection.cursor()
 
-        cur.execute(
+    cur.execute(
            """
            INSERT INTO students
            (name, email, department, year, photo)
@@ -83,10 +101,10 @@ def add_student():
            (name, email, department, year, filename)
         )
 
-        mysql.connection.commit()
-        cur.close()
+    mysql.connection.commit()
+    cur.close()
 
-        return redirect('/view_students')
+    return redirect('/view_students')
 
     return render_template('add_student.html')
 
