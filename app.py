@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import qrcode
+from flask_mail import Mail, Message
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
 from flask import send_file
@@ -9,6 +10,14 @@ from flask import Flask, render_template, request, redirect, session
 from flask_mysqldb import MySQL
 
 app = Flask(__name__)
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+
+app.config['MAIL_USERNAME'] = 'yourgmail@gmail.com'
+app.config['MAIL_PASSWORD'] = 'your_app_password'
+
+mail = Mail(app)
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 QR_FOLDER = 'static/qr_codes'
@@ -56,52 +65,78 @@ def login():
 # Add Student
 @app.route('/add_student', methods=['GET', 'POST'])
 def add_student():
+
     if 'logged_in' not in session:
-      return redirect('/login')
+        return redirect('/login')
 
     if request.method == 'POST':
 
+        # Form Data
         name = request.form['name']
         email = request.form['email']
         department = request.form['department']
         year = request.form['year']
+
+        # Photo Upload
         photo = request.files['photo']
-
         filename = secure_filename(photo.filename)
-        qr = qrcode.make(
-            f"""
-        Name: {name}
-        Email: {email}
-        Department: {department}
-        Year: {year}
-        """
-        )
 
-        qr.save(
-          os.path.join(
-          app.config['QR_FOLDER'],
-          f"{name}.png"
-        )
-    )
-    photo.save(
+        photo.save(
             os.path.join(
-               app.config['UPLOAD_FOLDER'],
-               filename
+                app.config['UPLOAD_FOLDER'],
+                filename
             )
         )
 
-    cur = mysql.connection.cursor()
-
-    cur.execute(
-           """
-           INSERT INTO students
-           (name, email, department, year, photo)
-           VALUES(%s, %s, %s, %s, %s)
-           """,
-           (name, email, department, year, filename)
+        # Generate QR Code
+        qr = qrcode.make(
+            f"""
+Name: {name}
+Email: {email}
+Department: {department}
+Year: {year}
+"""
         )
 
-    mysql.connection.commit()
+        qr.save(
+            os.path.join(
+                app.config['QR_FOLDER'],
+                f"{name}.png"
+            )
+        )
+
+        # Insert into Database
+        cur = mysql.connection.cursor()
+
+        cur.execute(
+            """
+            INSERT INTO students
+            (name, email, department, year, photo)
+            VALUES(%s, %s, %s, %s, %s)
+            """,
+            (name, email, department, year, filename)
+        )
+
+        mysql.connection.commit()
+        msg = Message(
+        "Welcome to Student Management System",
+        sender=app.config['MAIL_USERNAME'],
+        recipients=[email]
+    )
+
+    msg.body = f"""
+    Hello {name},
+
+    Your student profile has been created successfully.
+
+    Name : {name}
+    Department : {department}
+    Year : {year}
+
+    Thank you.
+    """
+
+    mail.send(msg)
     cur.close()
 
     return redirect('/view_students')
