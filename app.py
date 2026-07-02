@@ -535,6 +535,27 @@ def student_profile(id):
         marks=marks,
         avg_marks=avg_marks
     )
+@app.route('/student_id/<int:id>')
+def student_id(id):
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute(
+        "SELECT * FROM students WHERE id=%s",
+        (id,)
+    )
+
+    student = cur.fetchone()
+
+    cur.close()
+
+    return render_template(
+        'student_id_card.html',
+        student=student
+    )
 @app.route('/analytics')
 def analytics():
 
