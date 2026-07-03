@@ -14,9 +14,8 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 
-app.config['MAIL_USERNAME'] = 'yourgmail@gmail.com'
-app.config['MAIL_PASSWORD'] = 'your_app_password'
-
+app.config['MAIL_USERNAME'] = 'dhanasaravanan150603@gmail.com'
+app.config['MAIL_PASSWORD'] = 'abcdefghijklmnop'
 mail = Mail(app)
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -62,7 +61,6 @@ def login():
     return render_template('login.html')
 
 
-# Add Student
 @app.route('/add_student', methods=['GET', 'POST'])
 def add_student():
 
@@ -71,14 +69,13 @@ def add_student():
 
     if request.method == 'POST':
 
-        # Form Data
         name = request.form['name']
         email = request.form['email']
         department = request.form['department']
         year = request.form['year']
 
-        # Photo Upload
         photo = request.files['photo']
+
         filename = secure_filename(photo.filename)
 
         photo.save(
@@ -88,15 +85,13 @@ def add_student():
             )
         )
 
-        # Generate QR Code
-        qr = qrcode.make(
-            f"""
+        # Save QR Code
+        qr = qrcode.make(f"""
 Name: {name}
 Email: {email}
 Department: {department}
 Year: {year}
-"""
-        )
+""")
 
         qr.save(
             os.path.join(
@@ -105,45 +100,46 @@ Year: {year}
             )
         )
 
-        # Insert into Database
+        # Insert into database
         cur = mysql.connection.cursor()
 
         cur.execute(
             """
             INSERT INTO students
-            (name, email, department, year, photo)
-            VALUES(%s, %s, %s, %s, %s)
+            (name,email,department,year,photo)
+            VALUES(%s,%s,%s,%s,%s)
             """,
             (name, email, department, year, filename)
         )
 
         mysql.connection.commit()
+
+        # Send Email
         msg = Message(
-        "Welcome to Student Management System",
-        sender=app.config['MAIL_USERNAME'],
-        recipients=[email]
-    )
+            "Welcome to Student Management System",
+            sender=app.config['MAIL_USERNAME'],
+            recipients=[email]
+        )
 
-    msg.body = f"""
-    Hello {name},
+        msg.body = f"""
+Hello {name},
 
-    Your student profile has been created successfully.
+Your student profile has been created successfully.
 
-    Name : {name}
-    Department : {department}
-    Year : {year}
+Name : {name}
+Department : {department}
+Year : {year}
 
-    Thank you.
-    """
+Thank you.
+"""
 
-    mail.send(msg)
-    cur.close()
+        mail.send(msg)
 
-    return redirect('/view_students')
+        cur.close()
+
+        return redirect('/view_students')
 
     return render_template('add_student.html')
-
-
 # View Students
 @app.route('/view_students')
 def view_students():
@@ -685,6 +681,48 @@ def view_subjects():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+@app.route('/add_fee', methods=['GET', 'POST'])
+def add_fee():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    if request.method == 'POST':
+
+        student_id = request.form['student_id']
+        total_fee = float(request.form['total_fee'])
+        paid_fee = float(request.form['paid_fee'])
+
+        balance_fee = total_fee - paid_fee
+
+        if balance_fee == 0:
+            status = "Paid"
+        elif paid_fee == 0:
+            status = "Pending"
+        else:
+            status = "Partial"
+
+        cur.execute("""
+            INSERT INTO fees
+            (student_id,total_fee,paid_fee,balance_fee,status)
+            VALUES(%s,%s,%s,%s,%s)
+        """,(student_id,total_fee,paid_fee,balance_fee,status))
+
+        mysql.connection.commit()
+
+        return redirect('/view_fees')
+
+    cur.execute("SELECT id,name FROM students")
+    students = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'add_fee.html',
+        students=students
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
