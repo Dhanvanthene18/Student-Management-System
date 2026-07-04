@@ -752,6 +752,37 @@ def view_fees():
         'view_fees.html',
         records=records
     )
+@app.route('/fee_receipt/<int:id>')
+def fee_receipt(id):
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT
+            fees.id,
+            students.name,
+            students.department,
+            fees.total_fee,
+            fees.paid_fee,
+            fees.balance_fee,
+            fees.status
+        FROM fees
+        JOIN students
+        ON fees.student_id = students.id
+        WHERE fees.id=%s
+    """, (id,))
+
+    receipt = cur.fetchone()
+
+    cur.close()
+
+    return render_template(
+        'fee_receipt.html',
+        receipt=receipt
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
