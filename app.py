@@ -723,6 +723,35 @@ def add_fee():
         'add_fee.html',
         students=students
     )
+@app.route('/view_fees')
+def view_fees():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT
+            fees.id,
+            students.name,
+            fees.total_fee,
+            fees.paid_fee,
+            fees.balance_fee,
+            fees.status
+        FROM fees
+        JOIN students
+        ON fees.student_id = students.id
+    """)
+
+    records = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'view_fees.html',
+        records=records
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)
