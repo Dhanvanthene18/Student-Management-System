@@ -23,9 +23,10 @@
                 <th>ID</th>
                 <th>Student</th>
                 <th>Total Fee</th>
-                <th>Paid</th>
-                <th>Balance</th>
+                <th>Paid Fee</th>
+                <th>Balance Fee</th>
                 <th>Status</th>
+                <th>Receipt</th>
             </tr>
 
         </thead>
@@ -67,6 +68,15 @@
                     </span>
 
                 {% endif %}
+
+            </td>
+
+            <td>
+
+                <a href="/fee_receipt/{{ fee[0] }}"
+                   class="btn btn-success btn-sm">
+                    Receipt
+                </a>
 
             </td>
 
