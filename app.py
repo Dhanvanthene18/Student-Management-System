@@ -783,6 +783,41 @@ def fee_receipt(id):
         'fee_receipt.html',
         receipt=receipt
     )
+@app.route('/add_company', methods=['GET', 'POST'])
+def add_company():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    if request.method == 'POST':
+
+        company_name = request.form['company_name']
+        job_role = request.form['job_role']
+        package = request.form['package']
+        eligibility_cgpa = request.form['eligibility_cgpa']
+        interview_date = request.form['interview_date']
+
+        cur = mysql.connection.cursor()
+
+        cur.execute("""
+            INSERT INTO placements
+            (company_name, job_role, package, eligibility_cgpa, interview_date)
+            VALUES(%s,%s,%s,%s,%s)
+        """, (
+            company_name,
+            job_role,
+            package,
+            eligibility_cgpa,
+            interview_date
+        ))
+
+        mysql.connection.commit()
+        cur.close()
+
+        return redirect('/view_companies')
+
+    return render_template('add_company.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True)
