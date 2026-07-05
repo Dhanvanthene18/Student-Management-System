@@ -817,6 +817,28 @@ def add_company():
         return redirect('/view_companies')
 
     return render_template('add_company.html')
+@app.route('/view_companies')
+def view_companies():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM placements
+        ORDER BY interview_date ASC
+    """)
+
+    companies = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'view_companies.html',
+        companies=companies
+    )
 
 
 if __name__ == '__main__':
