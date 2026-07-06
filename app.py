@@ -839,6 +839,47 @@ def view_companies():
         'view_companies.html',
         companies=companies
     )
+@app.route('/apply_placement', methods=['GET', 'POST'])
+def apply_placement():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    if request.method == 'POST':
+
+        student_id = request.form['student_id']
+        company_id = request.form['company_id']
+        status = request.form['status']
+
+        cur.execute("""
+            INSERT INTO placement_applications
+            (student_id, company_id, status)
+            VALUES(%s,%s,%s)
+        """, (
+            student_id,
+            company_id,
+            status
+        ))
+
+        mysql.connection.commit()
+
+        return redirect('/placement_status')
+
+    cur.execute("SELECT id,name FROM students")
+    students = cur.fetchall()
+
+    cur.execute("SELECT id,company_name FROM placements")
+    companies = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'apply_placement.html',
+        students=students,
+        companies=companies
+    )
 
 
 if __name__ == '__main__':
