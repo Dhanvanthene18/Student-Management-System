@@ -880,6 +880,38 @@ def apply_placement():
         students=students,
         companies=companies
     )
+@app.route('/placement_status')
+def placement_status():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT
+            placement_applications.id,
+            students.name,
+            placements.company_name,
+            placement_applications.status
+
+        FROM placement_applications
+
+        JOIN students
+        ON placement_applications.student_id = students.id
+
+        JOIN placements
+        ON placement_applications.company_id = placements.id
+    """)
+
+    records = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'placement_status.html',
+        records=records
+    )
 
 
 if __name__ == '__main__':
