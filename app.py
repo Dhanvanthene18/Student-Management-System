@@ -8,6 +8,11 @@ from flask import send_file
 from datetime import date
 from flask import Flask, render_template, request, redirect, session
 from flask_mysqldb import MySQL
+from reportlab.platypus import SimpleDocTemplate
+from reportlab.platypus import Paragraph
+from reportlab.platypus import Image
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 
 app = Flask(__name__)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -911,6 +916,72 @@ def placement_status():
     return render_template(
         'placement_status.html',
         records=records
+    )
+@app.route('/download_id/<int:id>')
+def download_id(id):
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute(
+        "SELECT * FROM students WHERE id=%s",
+        (id,)
+    )
+
+    student = cur.fetchone()
+
+    cur.close()
+
+    pdf_name = f"ID_Card_{student[1]}.pdf"
+
+    doc = SimpleDocTemplate(pdf_name)
+
+    styles = getSampleStyleSheet()
+
+    elements = []
+
+    elements.append(
+        Paragraph(
+            "<b>STUDENT ID CARD</b>",
+            styles['Title']
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            f"Name : {student[1]}",
+            styles['Normal']
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            f"Email : {student[2]}",
+            styles['Normal']
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            f"Department : {student[3]}",
+            styles['Normal']
+        )
+    )
+
+    elements.append(
+        Paragraph(
+            f"Year : {student[4]}",
+            styles['Normal']
+        )
+    )
+
+    doc.build(elements)
+
+    return send_file(
+        pdf_name,
+        as_attachment=True
     )
 
 
