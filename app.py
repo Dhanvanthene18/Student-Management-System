@@ -428,6 +428,93 @@ def view_marks():
         'view_marks.html',
         records=records
     )
+@app.route('/generate_result', methods=['GET', 'POST'])
+def generate_result():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    if request.method == 'POST':
+
+        student_id = request.form['student_id']
+        semester = request.form['semester']
+
+        # Get Average and Total Marks
+        cur.execute("""
+            SELECT
+                SUM(marks),
+                AVG(marks)
+            FROM marks
+            WHERE student_id=%s
+        """, (student_id,))
+
+        result = cur.fetchone()
+
+        total_marks = result[0] if result[0] else 0
+        percentage = result[1] if result[1] else 0
+
+        # Grade Calculation
+        if percentage >= 90:
+            grade = "A+"
+            status = "Pass"
+
+        elif percentage >= 80:
+            grade = "A"
+            status = "Pass"
+
+        elif percentage >= 70:
+            grade = "B"
+            status = "Pass"
+
+        elif percentage >= 60:
+            grade = "C"
+            status = "Pass"
+
+        elif percentage >= 50:
+            grade = "D"
+            status = "Pass"
+
+        else:
+            grade = "F"
+            status = "Fail"
+
+        cur.execute("""
+            INSERT INTO results
+            (
+                student_id,
+                semester,
+                total_marks,
+                percentage,
+                grade,
+                result_status
+            )
+            VALUES(%s,%s,%s,%s,%s,%s)
+        """,
+        (
+            student_id,
+            semester,
+            total_marks,
+            percentage,
+            grade,
+            status
+        ))
+
+        mysql.connection.commit()
+
+        return redirect('/view_results')
+
+    # Student List
+    cur.execute("SELECT id,name FROM students")
+    students = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        "generate_result.html",
+        students=students
+    )
 @app.route('/marks_report')
 def marks_report():
 
