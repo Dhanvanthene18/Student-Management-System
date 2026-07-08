@@ -515,6 +515,40 @@ def generate_result():
         "generate_result.html",
         students=students
     )
+@app.route('/view_results')
+def view_results():
+
+    if 'logged_in' not in session:
+        return redirect('/login')
+
+    cur = mysql.connection.cursor()
+
+    cur.execute("""
+        SELECT
+            results.id,
+            students.name,
+            results.semester,
+            results.total_marks,
+            results.percentage,
+            results.grade,
+            results.result_status
+
+        FROM results
+
+        JOIN students
+        ON results.student_id = students.id
+
+        ORDER BY results.id DESC
+    """)
+
+    records = cur.fetchall()
+
+    cur.close()
+
+    return render_template(
+        'view_results.html',
+        records=records
+    )
 @app.route('/marks_report')
 def marks_report():
 
